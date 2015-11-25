@@ -1,0 +1,15 @@
+- name: "Setup deploy folders for {{ server_name }}"
+  file: "path={{ project_root }}/{{ item }} state=directory"
+  with_items:
+    - host
+    - log
+
+- include: nginx.yml
+  tags: nginx
+- include: uwsgi.yml
+  tags: uwsgi
+- include: "app.yml"
+  tags: app
+
+- name: Set deploy folder owner
+  file: "path={{ project_root }} state=directory owner={{ www_user }} group={{ www_user }} recurse=yes"

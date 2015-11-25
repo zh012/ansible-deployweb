@@ -1,0 +1,55 @@
+{% if nginx_ssl_enabled %}
+server {
+    listen 80;
+    server_name {{ server_name }};
+    return 301 https://$server_name$request_uri;
+}
+{% endif %}
+
+server {
+{% if nginx_ssl_enabled %}
+    listen 443;
+    ssl on;
+    ssl_certificate {{ project_root }}/host/nginx_ssl.crt;
+    ssl_certificate_key {{ project_root }}/host/nginx_ssl.key;
+{% else %}
+    listen  80;
+{% endif %}
+    server_name  {{ server_name }};
+
+    location / {
+    {% set params = nginx_default_root_params|combine(nginx_custom_root_params) %}
+    {%- for key, values in params.items() -%}
+    {%- if values -%}
+    {% for val in values %}
+    {{ key }} {{ val }};
+    {% endfor %}
+    {%- endif -%}
+    {%- endfor -%}
+
+    {% if nginx_auth_basic_enabled %}
+    auth_basic "Restricted Area";  auth_basic_user_file {{ project_root }}/host/nginx_htpasswd;
+    {% endif %}
+    }
+
+{% for loc in nginx_locations %}
+    location {{ loc.where }} {
+    {% for param in loc.params %}
+        {{ param }};
+    {% endfor %}
+    }
+{% endfor %}
+
+
+{% set params = nginx_defalut_server_params|combine(nginx_custom_server_params) %}
+{% for key, values in params.items() %}
+{% if values %}
+{% for val in values %}
+    {{ key }} {{ val }};
+{% endfor %}
+{% endif%}
+{% endfor %}
+
+    access_log {{ project_root }}/log/nginx_access.log;
+    error_log {{ project_root }}/log/nginx_error.log;
+}

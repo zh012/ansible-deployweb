@@ -1,0 +1,35 @@
+- name: Install packages
+  apt: "pkg={{ item }} state=present"
+  with_items:
+    - nginx
+    - python-passlib
+
+- name: Copy ssl certificate files
+  copy: "content={{ item.value }} dest={{ project_root }}/host/nginx_ssl.{{ item.key }} mode=0600"
+  with_dict:
+    crt: "{{ nginx_ssl_certificate }}"
+    key: "{{ nginx_ssl_certificate_key }}"
+  notify: reload nginx
+
+- name: Clear the htpasswd file
+  file: "path={{ project_root }}/host/nginx_htpasswd state=absent"
+  when: "{{ nginx_auth_basic_enabled }}"
+
+- name: Copy auth basic user file
+  htpasswd: "name={{ item.key }} password={{ item.value }} path={{ project_root }}/host/nginx_htpasswd state=present"
+  with_dict: "{{ nginx_auth_basic_users }}"
+  notify: reload nginx
+  when: "{{ nginx_auth_basic_enabled }}"
+
+- name: Create nginx vhost file
+  template: "src=nginx.vhost.j2 dest={{ project_root }}/host/nginx.vhost mode=0600"
+  notify: reload nginx
+
+- name: "Remove old vhost, if it is to be the default"
+  file: "path=/etc/nginx/sites-enabled/{{ server_name }} state=absent"
+  notify: reload nginx
+  when: "{{ nginx_default_site }}"
+
+- name: Enable the vhost
+  file: "src={{ project_root }}/host/nginx.vhost dest=/etc/nginx/sites-enabled/{{ nginx_default_site and 'default' or server_name }} state=link"
+  notify: reload nginx

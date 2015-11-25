@@ -1,0 +1,9 @@
+{% set config = uwsgi_default_config|combine(uwsgi_custom_config, recursive=True) %}
+{% for key, value in config.items() -%}
+    {% for k, v in value.items() -%}
+        {% if not v -%}
+            {{ value.pop(k) or '' }}
+        {%- endif %}
+    {%- endfor %}
+{%- endfor %}
+{{ config | to_nice_yaml }}

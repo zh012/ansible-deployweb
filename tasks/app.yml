@@ -1,0 +1,30 @@
+- name: Install virtualenv
+  apt: pkg=python-virtualenv state=present
+
+- name: Setup git deploy key
+  copy: "content={{ app_deploy_key}} dest={{ project_root }}/host/deploy_key mode=0600"
+  when: "{{ app_deploy_key is defined }}"
+
+- name: "Deploy the application of {{ server_name }} from git repo"
+  git:
+    repo: "{{ app_repo }}"
+    dest: "{{ project_root }}/app"
+    version: "{{ app_version }}"
+    key_file: "{{ project_root }}/host/deploy_key"
+    force: yes
+    accept_hostkey: yes
+  notify: reload uwsgi
+
+- name: Setup virtualenv and install dependencies
+  command: "virtualenv {{ project_root }}/venv"
+  args:
+   creates: "{{ project_root }}/venv"
+
+- name: Update pip
+  pip: "name=pip state=latest virtualenv={{ project_root }}/venv"
+
+- name: Install dependencies
+  pip: "requirements={{ project_root }}/app/{{ app_requirements }} virtualenv={{ project_root }}/venv"
+
+- name: Delete the deploy_key
+  file: "path={{ project_root }}/host/deploy_key state=absent"

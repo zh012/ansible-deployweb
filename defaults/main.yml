@@ -1,19 +1,7 @@
-# ansible-deployweb
+---
 
-#### Ansible role deploy web app with nginx and uwsgi.
-
-Only support ubuntu.
-
-Natively support python project.
-
-# Settings
-
-```yaml
-#---------------------------------
-# global configurations
-#---------------------------------
-
-server_name: not provided yet required  # required
+#required
+server_name: not provided yet required
 project_root: "/opt/{{ server_name }}"
 www_user: www-data
 
@@ -22,9 +10,8 @@ www_user: www-data
 #---------------------------------
 nginx_default_site: no
 nginx_ssl_enabled: no
-nginx_ssl_certificate: ""  # you may want to defined this value in a
-                           # encrypted file by utilizing ansible-vault
-nginx_ssl_certificate_key: ""  # encrpyt as well
+nginx_ssl_certificate: ""
+nginx_ssl_certificate_key: ""
 nginx_auth_basic_enabled: no
 nginx_auth_basic_users: {}
 nginx_default_root_params:
@@ -65,11 +52,12 @@ nginx_custom_server_params: {}
 # application deploy configurations
 #---------------------------------
 
-app_repo: ""  # required
+#required
+app_repo: ""
 app_version: master
-#app_deploy_key: ssh key to access the git repo
-app_requirements: "requirements.txt"  # dependent packages
-app_wsgi: "wsgi"  # wsgi module
+#app_deploy_key:
+app_requirements: "requirements.txt"
+app_wsgi: "wsgi"
 
 
 #---------------------------------
@@ -90,4 +78,3 @@ uwsgi_default_config:
     module: "{{ app_wsgi }}"
 
 uwsgi_custom_config: {}
-```

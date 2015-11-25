@@ -1,0 +1,18 @@
+- name: Install uwsgi globally
+  pip: "name=uwsgi state=present"
+
+- name: Enable uwsgi-emperor deamon
+  copy: src=uwsgi-emperor.conf dest=/etc/init/uwsgi-emperor.conf
+
+- name: Setup uwsgi-emperor working folders
+  file: "path={{ item }} owner=root group=root state=directory"
+  with_items:
+    - /etc/uwsgi
+    - /var/log/uwsgi
+
+- name: Configure uwsgi for application
+  template: "src=uwsgi.yml.j2 dest={{ project_root }}/host/uwsgi.yml mode=0600"
+
+- name: Add application configure to emperor
+  file: "src={{ project_root }}/host/uwsgi.yml dest=/etc/uwsgi/{{ server_name }}.yml state=link"
+  notify: reload uwsgi
